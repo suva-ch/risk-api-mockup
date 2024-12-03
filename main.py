@@ -49,6 +49,9 @@ class myAPI(BasePolicendatenApi):
         if event_date.year < 2023:
             return JSONResponse(status_code=400, content=Error(message='Invalid date', id=str(uuid.uuid4()), key='9131b5a5-cb55-4446-b7c3-ca79a18cee27', args=[]).model_dump()) # type: ignore[return-value]
         
+        if customer_id is None:
+            customer_id = '8-01747-90000'
+
         # fake data        
         bu_a = BusinessUnit(businessUnitCode='A', description='Demo BT')
         s1 = Subnummer(subnumberCode='01', description='Demo', premiumModel='UVG_CLASSIC', businessUnits=[bu_a])
@@ -73,7 +76,7 @@ class myAPI(BasePolicendatenApi):
         c2.business_unit_code='M'
         c2.active=True
 
-        s2 = Subnummer(subnumberCode='02', description='Demo Taritemp', premiumModel='UVG_OCCUPATION_CODES', occupationCodes=[c1, c2])
+        s2 = Subnummer(subnumberCode='02', description='Demo Taritemp - ' + customer_id, premiumModel='UVG_OCCUPATION_CODES', occupationCodes=[c1, c2])
         return [s1, s2]
 
 app = FastAPI(
