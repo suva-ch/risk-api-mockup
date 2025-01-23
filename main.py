@@ -53,9 +53,10 @@ class myAPI(BasePolicendatenApi):
         if customer_id is None:
             customer_id = '8-01747-90000'
 
-        # fake data        
-        bu_a = BusinessUnit(businessUnitCode='A', description='Demo BT')
-        s1 = Subnummer(subnumberCode='01', description='Demo', premiumModel='UVG_CLASSIC', businessUnits=[bu_a])
+        # fake data
+        bu_a = BusinessUnit(businessUnitCode='A', description='Montage')
+        bu_d = BusinessUnit(businessUnitCode='D', description='Forschung')
+        s1 = Subnummer(subnumberCode='01', description='Demo', premiumModel='UVG_CLASSIC', businessUnits=[bu_a, bu_d])
 
         desc1_de = OccupationDescription(language='de', gender=Gender.MALE, value='Eisenleger')
         c1 = OccupationCode(suvaOccupationCodeId='3a2f212f-8bf1-4d7b-beb1-1b32d91bed79', IscoOccupationTypeId=71140, descriptions=[desc1_de], businessUnitCode='L', active=True)
