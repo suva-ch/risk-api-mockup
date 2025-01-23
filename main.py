@@ -25,7 +25,8 @@ from openapi_server.apis.policendaten_api import BasePolicendatenApi
 from openapi_server.models.business_unit import BusinessUnit
 from openapi_server.models.subnummer import Subnummer
 from openapi_server.models.occupation_code import OccupationCode
-from openapi_server.models.localized_value import LocalizedValue
+from openapi_server.models.occupation_description import OccupationDescription
+from openapi_server.models.gender import Gender
 from openapi_server.models.error import Error
 
 logging.basicConfig(level=logging.DEBUG)
@@ -56,27 +57,18 @@ class myAPI(BasePolicendatenApi):
         bu_a = BusinessUnit(businessUnitCode='A', description='Demo BT')
         s1 = Subnummer(subnumberCode='01', description='Demo', premiumModel='UVG_CLASSIC', businessUnits=[bu_a])
 
-        desc1_de = LocalizedValue()
-        desc1_de.language='de'
-        desc1_de.value='Eisenleger'
-        c1 = OccupationCode()
-        c1.suva_occupation_code_id = '3a2f212f-8bf1-4d7b-beb1-1b32d91bed79'
-        c1.isco_occupation_type_id=71140
-        c1.descriptions=[desc1_de]
-        c1.business_unit_code='L'
-        c1.active=True
+        desc1_de = OccupationDescription(language='de', gender=Gender.MALE, value='Eisenleger')
+        c1 = OccupationCode(suvaOccupationCodeId='3a2f212f-8bf1-4d7b-beb1-1b32d91bed79', IscoOccupationTypeId=71140, descriptions=[desc1_de], businessUnitCode='L', active=True)
 
-        desc2_de = LocalizedValue()
-        desc2_de.language='de'
-        desc2_de.value='Staplerfahrer'
-        c2 = OccupationCode()
-        c2.suva_occupation_code_id='c95feeb1-ddfb-4d21-ad5b-292b966dc4dd'
-        c2.isco_occupation_type_id=83440
-        c2.descriptions=[desc2_de]
-        c2.business_unit_code='M'
-        c2.active=True
+        desc2_de = OccupationDescription(language='de', gender=Gender.FEMALE, value='Staplerfahrerin')
+        c2 = OccupationCode(suvaOccupationCodeId='c95feeb1-ddfb-4d21-ad5b-292b966dc4dd', IscoOccupationTypeId=83440, descriptions=[desc2_de], businessUnitCode='M', active=True)
 
-        s2 = Subnummer(subnumberCode='02', description='Demo Taritemp - ' + customer_id, premiumModel='UVG_OCCUPATION_CODES', occupationCodes=[c1, c2])
+        desc3_fr1 = OccupationDescription(language='fr', gender=Gender.FEMALE, value='Employée transport et logistique')
+        desc3_fr2 = OccupationDescription(language='fr', gender=Gender.GENDERLESS, value='Employé transport et logistique | Employée transport et logistique')
+        desc3_de1 = OccupationDescription(language='de', gender=Gender.MALE, value='Angestellter Transport und Logistik')
+        c3 = OccupationCode(suvaOccupationCodeId='f66a5e18-cf8b-4538-ad2c-2dea6ca73669', IscoOccupationTypeId=51512, descriptions=[desc3_fr1, desc3_fr2, desc3_de1], businessUnitCode='M', active=True)
+
+        s2 = Subnummer(subnumberCode='02', description='Demo Taritemp - ' + customer_id, premiumModel='UVG_OCCUPATION_CODES', occupationCodes=[c1, c2, c3])
         return [s1, s2]
 
 app = FastAPI(
