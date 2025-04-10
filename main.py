@@ -29,6 +29,7 @@ from openapi_server.models.subnummer_filtered import SubnummerFiltered
 from openapi_server.models.occupation_code import OccupationCode
 from openapi_server.models.occupation_code_filtered import OccupationCodeFiltered
 from openapi_server.models.occupation_description import OccupationDescription
+from openapi_server.models.language import Language
 from openapi_server.models.gender import Gender
 from openapi_server.models.error import Error
 
@@ -69,14 +70,14 @@ log = logging.getLogger()
 
 class myAPI(BasePolicendatenApi):
         
-    # http://localhost:8003/policy?customerIDx=8-01747-90000&eventDate=2023-12-30
+    # http://localhost:8003/v1/policies/8-01747-90000?eventDate=2025-04-04
     async def get_policy(
         self,
-        event_date: Annotated[date, Field(description="# de Das Datum des Unfall-Ereignisses. Wenn das aktuelle Tagesdatum verwendet wird, muss die Schnittstelle später erneut mit dem Ereignis-Datum des Schadens aufgerufen werden, insbesondere bei einem Jahreswechsel, um sicherzustellen, dass die in der Schadenmeldung referenzierten Objekte zum Ereignis-Datum gültig sind. **Einschränkung:** Datum muss <= Tagesdatum sein und nicht weiter zurück als das vorhergehende Kalenderjahr.  # en The event date. If the current date is used, the API should later be called again with the accident event date, particularly if a year change occurs in between, to ensure objects referenced in the accident report are valid at the event date. **Restriction:** The date must be <= today's date and no earlier than the previous calendar year. ")],
-        customer_id: Annotated[Optional[StrictStr], Field(description="# de Die Suva-Kundennummer (z.B. 8-01747-90000).  # en Suva customer ID (e.g., 8-01747-90000). ")],
-        x_client_vendor: Annotated[Optional[StrictStr], Field(description="# de Name des Herstellers der Client-Anwendung.  # en Name of the vendor responsible for the client application. ")],
-        x_client_name: Annotated[Optional[StrictStr], Field(description="# de Produkt-Name der Client-Anwendung.  # en Product name of the client application. ")],
-        x_client_version: Annotated[Optional[StrictStr], Field(description="# de Version der Anwendung.  # en Version of the application. ")],
+        customerId: Annotated[StrictStr, Field(description="🇩🇪 Die Suva-Kundennummer (z.B. 8-01747-90000).  🇬🇧 Suva customer ID (e.g., 8-01747-90000). ")],
+        event_date: Annotated[date, Field(description="🇩🇪 Das Datum des Unfall-Ereignisses. Wenn das aktuelle Tagesdatum verwendet wird, muss die Schnittstelle später erneut mit dem Ereignis-Datum des Schadens aufgerufen werden, insbesondere bei einem Jahreswechsel, um sicherzustellen, dass die in der Schadenmeldung referenzierten Objekte zum Ereignis-Datum gültig sind. **Einschränkung:** Datum muss <= Tagesdatum sein und nicht weiter zurück als das vorhergehende Kalenderjahr.  🇬🇧 The event date. If the current date is used, the API should later be called again with the accident event date, particularly if a year change occurs in between, to ensure objects referenced in the accident report are valid at the event date. **Restriction:** The date must be <= today's date and no earlier than the previous calendar year. ")],
+        x_client_vendor: Annotated[Optional[StrictStr], Field(description="🇩🇪 Name des Herstellers der Client-Anwendung.  🇬🇧 Name of the vendor responsible for the client application. ")],
+        x_client_name: Annotated[Optional[StrictStr], Field(description="🇩🇪 Produkt-Name der Client-Anwendung.  🇬🇧 Product name of the client application. ")],
+        x_client_version: Annotated[Optional[StrictStr], Field(description="🇩🇪 Version der Anwendung.  🇬🇧 Version of the application. ")],
     ) -> List[Subnummer]:
         log.info('event_date=%s', event_date)
 
@@ -86,8 +87,8 @@ class myAPI(BasePolicendatenApi):
         if event_date.year < 2023:
             return JSONResponse(status_code=400, content=Error(message='Invalid date', id=str(uuid.uuid4()), key='9131b5a5-cb55-4446-b7c3-ca79a18cee27', args=[]).model_dump()) # type: ignore[return-value]
         
-        if customer_id is None:
-            customer_id = '8-01747-90000'
+        if customerId is None:
+            customerId = '8-01747-90000'
 
         # fake data
         bu_a = BusinessUnit(businessUnitCode='A', description='Montage')
@@ -113,16 +114,16 @@ class myAPI(BasePolicendatenApi):
             )
             occupation_codes.append(occupation_code)
 
-        s2 = Subnummer(subnumberCode='02', description='Demo Taritemp - ' + customer_id, premiumModel='UVG_OCCUPATION_CODES', occupationCodes=occupation_codes)
+        s2 = Subnummer(subnumberCode='02', description='Demo Taritemp - ' + customerId, premiumModel='UVG_OCCUPATION_CODES', occupationCodes=occupation_codes)
         return [s1, s2]
 
-    # http://localhost:8003/policy/de/female?customerIDx=8-01747-90000&eventDate=2023-12-30
+    # http://localhost:8003/v1/policies/8-01747-90000/de/female?eventDate=2025-04-04
     async def get_policy_filtered(
         self,
-        language: Annotated[StrictStr, Field(description="🇩🇪 Gewünschte Sprache für die Berufsbezeichnungen.  🇬🇧 Desired language for occupation descriptions. ")],
+        customerId: Annotated[StrictStr, Field(description="🇩🇪 Die Suva-Kundennummer (z.B. 8-01747-90000).  🇬🇧 Suva customer ID (e.g., 8-01747-90000). ")],
+        language: Annotated[Language, Field(description="🇩🇪 Gewünschte Sprache für die Berufsbezeichnungen.  🇬🇧 Desired language for occupation descriptions. ")],
         gender: Annotated[Gender, Field(description="🇩🇪 Gewünschtes Geschlecht für die Berufsbezeichnungen.  🇬🇧 Desired gender for occupation descriptions. ")],
         event_date: Annotated[date, Field(description="🇩🇪 Das Datum des Unfall-Ereignisses. Wenn das aktuelle Tagesdatum verwendet wird, muss die Schnittstelle später erneut mit dem Ereignis-Datum des Schadens aufgerufen werden, insbesondere bei einem Jahreswechsel, um sicherzustellen, dass die in der Schadenmeldung referenzierten Objekte zum Ereignis-Datum gültig sind. **Einschränkung:** Datum muss <= Tagesdatum sein und nicht weiter zurück als das vorhergehende Kalenderjahr.  🇬🇧 The event date. If the current date is used, the API should later be called again with the accident event date, particularly if a year change occurs in between, to ensure objects referenced in the accident report are valid at the event date. **Restriction:** The date must be <= today's date and no earlier than the previous calendar year. ")],
-        customer_id: Annotated[Optional[StrictStr], Field(description="🇩🇪 Die Suva-Kundennummer (z.B. 8-01747-90000).  🇬🇧 Suva customer ID (e.g., 8-01747-90000). ")],
         x_client_vendor: Annotated[Optional[StrictStr], Field(description="🇩🇪 Name des Herstellers der Client-Anwendung.  🇬🇧 Name of the vendor responsible for the client application. ")],
         x_client_name: Annotated[Optional[StrictStr], Field(description="🇩🇪 Produkt-Name der Client-Anwendung.  🇬🇧 Product name of the client application. ")],
         x_client_version: Annotated[Optional[StrictStr], Field(description="🇩🇪 Version der Anwendung.  🇬🇧 Version of the application. ")],
@@ -134,8 +135,8 @@ class myAPI(BasePolicendatenApi):
         if event_date.year < 2023:
             return JSONResponse(status_code=400, content=Error(message='Invalid date', id=str(uuid.uuid4()), key='9131b5a5-cb55-4446-b7c3-ca79a18cee27', args=[]).model_dump()) # type: ignore[return-value]
 
-        if customer_id is None:
-            customer_id = '8-01747-90000'
+        if customerId is None:
+            customerId = '8-01747-90000'
 
         occupation_codes = []
         # Process MOCKUP_DATA with language and gender selection logic
@@ -187,7 +188,7 @@ class myAPI(BasePolicendatenApi):
         bu_d = BusinessUnitFiltered(businessUnitCode='D', description='Forschung')
 
         s1 = SubnummerFiltered(subnumberCode='01', description='Demo', premiumModel='UVG_CLASSIC', businessUnits=[bu_a, bu_d])
-        s2 = SubnummerFiltered(subnumberCode='02', description='Demo Taritemp - ' + customer_id, premiumModel='UVG_OCCUPATION_CODES', occupationCodes=occupation_codes)
+        s2 = SubnummerFiltered(subnumberCode='02', description='Demo Taritemp - ' + customerId, premiumModel='UVG_OCCUPATION_CODES', occupationCodes=occupation_codes)
 
         return [s1, s2]
 
