@@ -1,5 +1,5 @@
-# wget -O openapi-generator-cli-7.10.0.jar https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7.10.0/openapi-generator-cli-7.10.0.jar
-# java -jar openapi-generator-cli-7.10.0.jar generate -i https://raw.githubusercontent.com/suva-ch/risk-api/refs/heads/main/tarifierung-api.yaml -g python-fastapi -o gen
+# wget -O openapi-generator-cli-7.12.0.jar https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7.12.0/openapi-generator-cli-7.12.0.jar
+# java -jar openapi-generator-cli-7.12.0.jar generate -i https://raw.githubusercontent.com/suva-ch/risk-api/refs/heads/main/tarifierung-api.yaml -g python-fastapi -o gen
 
 import pathlib
 
@@ -22,13 +22,14 @@ import uuid
 from datetime import date
 from openapi_server.apis.policendaten_api import router as defaultRouter
 from openapi_server.apis.policendaten_api import BasePolicendatenApi
-from openapi_server.models.business_unit import BusinessUnit
-from openapi_server.models.business_unit_filtered import BusinessUnitFiltered
-from openapi_server.models.subnummer import Subnummer
-from openapi_server.models.subnummer_filtered import SubnummerFiltered
+from openapi_server.models.sub_number import SubNumber
+from openapi_server.models.sub_number_filtered import SubNumberFiltered
 from openapi_server.models.occupation_code import OccupationCode
 from openapi_server.models.occupation_code_filtered import OccupationCodeFiltered
 from openapi_server.models.occupation_description import OccupationDescription
+from openapi_server.models.company_part_filtered import CompanyPartFiltered
+from openapi_server.models.occupation_code_filtered import OccupationCodeFiltered
+from openapi_server.models.company_part import CompanyPart
 from openapi_server.models.language import Language
 from openapi_server.models.gender import Gender
 from openapi_server.models.error import Error
@@ -37,7 +38,7 @@ MOCKUP_DATA: List[Dict] = [
     {
         'suvaOccupationCodeId': '3a2f212f-8bf1-4d7b-beb1-1b32d91bed79',
         'IscoOccupationTypeId': 71140,
-        'businessUnitCode': 'L',
+        'companyPartCode': 'L',
         'descriptions': [
             {'language': 'de', 'gender': Gender.MALE, 'value': 'Eisenleger'}
         ],
@@ -46,7 +47,7 @@ MOCKUP_DATA: List[Dict] = [
     {
         'suvaOccupationCodeId': 'c95feeb1-ddfb-4d21-ad5b-292b966dc4dd',
         'IscoOccupationTypeId': 83440,
-        'businessUnitCode': 'M',
+        'companyPartCode': 'M',
         'descriptions': [
             {'language': 'de', 'gender': Gender.FEMALE, 'value': 'Staplerfahrerin'}
         ],
@@ -55,7 +56,7 @@ MOCKUP_DATA: List[Dict] = [
     {
         'suvaOccupationCodeId': 'f66a5e18-cf8b-4538-ad2c-2dea6ca73669',
         'IscoOccupationTypeId': 51512,
-        'businessUnitCode': 'M',
+        'companyPartCode': 'M',
         'descriptions': [
             {'language': 'fr', 'gender': Gender.FEMALE, 'value': 'Employée transport et logistique'},
             {'language': 'fr', 'gender': Gender.GENDERLESS, 'value': 'Employé transport et logistique | Employée transport et logistique'},
@@ -73,12 +74,12 @@ class myAPI(BasePolicendatenApi):
     # http://localhost:8003/v1/policies/8-01747-90000?eventDate=2025-04-04
     async def get_policy(
         self,
-        customerId: Annotated[StrictStr, Field(description="🇩🇪 Die Suva-Kundennummer (z.B. 8-01747-90000).  🇬🇧 Suva customer ID (e.g., 8-01747-90000). ")],
         event_date: Annotated[date, Field(description="🇩🇪 Das Datum des Unfall-Ereignisses. Wenn das aktuelle Tagesdatum verwendet wird, muss die Schnittstelle später erneut mit dem Ereignis-Datum des Schadens aufgerufen werden, insbesondere bei einem Jahreswechsel, um sicherzustellen, dass die in der Schadenmeldung referenzierten Objekte zum Ereignis-Datum gültig sind. **Einschränkung:** Datum muss <= Tagesdatum sein und nicht weiter zurück als das vorhergehende Kalenderjahr.  🇬🇧 The event date. If the current date is used, the API should later be called again with the accident event date, particularly if a year change occurs in between, to ensure objects referenced in the accident report are valid at the event date. **Restriction:** The date must be <= today's date and no earlier than the previous calendar year. ")],
+        customerId: Annotated[StrictStr, Field(description="🇩🇪 Die Suva-Kundennummer (z.B. 8-01747-90000).  🇬🇧 Suva customer ID (e.g., 8-01747-90000). ")],
         x_client_vendor: Annotated[Optional[StrictStr], Field(description="🇩🇪 Name des Herstellers der Client-Anwendung.  🇬🇧 Name of the vendor responsible for the client application. ")],
         x_client_name: Annotated[Optional[StrictStr], Field(description="🇩🇪 Produkt-Name der Client-Anwendung.  🇬🇧 Product name of the client application. ")],
         x_client_version: Annotated[Optional[StrictStr], Field(description="🇩🇪 Version der Anwendung.  🇬🇧 Version of the application. ")],
-    ) -> List[Subnummer]:
+    ) -> List[SubNumber]:
         log.info('event_date=%s', event_date)
 
         if event_date is None:
@@ -91,9 +92,9 @@ class myAPI(BasePolicendatenApi):
             customerId = '8-01747-90000'
 
         # fake data
-        bu_a = BusinessUnit(businessUnitCode='A', description='Montage')
-        bu_d = BusinessUnit(businessUnitCode='D', description='Forschung')
-        s1 = Subnummer(subnumberCode='01', description='Demo', premiumModel='UVG_CLASSIC', businessUnits=[bu_a, bu_d])
+        bu_a = CompanyPart(companyPartCode='A', description='Montage')
+        bu_d = CompanyPart(companyPartCode='D', description='Forschung')
+        s1 = SubNumber(subNumberCode='01', description='Demo', premiumModel='UVG_CLASSIC', companyParts=[bu_a, bu_d])
 
         # Create occupation codes from mockup data
         occupation_codes = []
@@ -107,27 +108,27 @@ class myAPI(BasePolicendatenApi):
             ]
             occupation_code = OccupationCode(
                 suvaOccupationCodeId=code_data['suvaOccupationCodeId'],
-                IscoOccupationTypeId=code_data['IscoOccupationTypeId'],
+                iscoOccupationTypeId=code_data['IscoOccupationTypeId'],
                 descriptions=descriptions,
-                businessUnitCode=code_data['businessUnitCode'],
+                companyPartCode=code_data['companyPartCode'],
                 active=code_data['active']
             )
             occupation_codes.append(occupation_code)
 
-        s2 = Subnummer(subnumberCode='02', description='Demo Taritemp - ' + customerId, premiumModel='UVG_OCCUPATION_CODES', occupationCodes=occupation_codes)
+        s2 = SubNumber(subNumberCode='02', description='Demo Taritemp - ' + customerId, premiumModel='UVG_OCCUPATION_CODES', occupationCodes=occupation_codes)
         return [s1, s2]
 
     # http://localhost:8003/v1/policies/8-01747-90000/de/female?eventDate=2025-04-04
     async def get_policy_filtered(
         self,
+        event_date: Annotated[date, Field(description="🇩🇪 Das Datum des Unfall-Ereignisses. Wenn das aktuelle Tagesdatum verwendet wird, muss die Schnittstelle später erneut mit dem Ereignis-Datum des Schadens aufgerufen werden, insbesondere bei einem Jahreswechsel, um sicherzustellen, dass die in der Schadenmeldung referenzierten Objekte zum Ereignis-Datum gültig sind. **Einschränkung:** Datum muss <= Tagesdatum sein und nicht weiter zurück als das vorhergehende Kalenderjahr.  🇬🇧 The event date. If the current date is used, the API should later be called again with the accident event date, particularly if a year change occurs in between, to ensure objects referenced in the accident report are valid at the event date. **Restriction:** The date must be <= today's date and no earlier than the previous calendar year. ")],
         customerId: Annotated[StrictStr, Field(description="🇩🇪 Die Suva-Kundennummer (z.B. 8-01747-90000).  🇬🇧 Suva customer ID (e.g., 8-01747-90000). ")],
         language: Annotated[Language, Field(description="🇩🇪 Gewünschte Sprache für die Berufsbezeichnungen.  🇬🇧 Desired language for occupation descriptions. ")],
         gender: Annotated[Gender, Field(description="🇩🇪 Gewünschtes Geschlecht für die Berufsbezeichnungen.  🇬🇧 Desired gender for occupation descriptions. ")],
-        event_date: Annotated[date, Field(description="🇩🇪 Das Datum des Unfall-Ereignisses. Wenn das aktuelle Tagesdatum verwendet wird, muss die Schnittstelle später erneut mit dem Ereignis-Datum des Schadens aufgerufen werden, insbesondere bei einem Jahreswechsel, um sicherzustellen, dass die in der Schadenmeldung referenzierten Objekte zum Ereignis-Datum gültig sind. **Einschränkung:** Datum muss <= Tagesdatum sein und nicht weiter zurück als das vorhergehende Kalenderjahr.  🇬🇧 The event date. If the current date is used, the API should later be called again with the accident event date, particularly if a year change occurs in between, to ensure objects referenced in the accident report are valid at the event date. **Restriction:** The date must be <= today's date and no earlier than the previous calendar year. ")],
         x_client_vendor: Annotated[Optional[StrictStr], Field(description="🇩🇪 Name des Herstellers der Client-Anwendung.  🇬🇧 Name of the vendor responsible for the client application. ")],
         x_client_name: Annotated[Optional[StrictStr], Field(description="🇩🇪 Produkt-Name der Client-Anwendung.  🇬🇧 Product name of the client application. ")],
         x_client_version: Annotated[Optional[StrictStr], Field(description="🇩🇪 Version der Anwendung.  🇬🇧 Version of the application. ")],
-    ) -> List[SubnummerFiltered]:
+    ) -> List[SubNumberFiltered]:
 
         if event_date is None:
             return JSONResponse(status_code=400, content=Error(message='eventDate missing', id=str(uuid.uuid4()), key='e3972474-e930-4d03-9b77-2d0e14f64148', args=[]).model_dump()) # type: ignore[return-value]
@@ -177,18 +178,18 @@ class myAPI(BasePolicendatenApi):
             
             occupation_codes.append(OccupationCodeFiltered(
                 suvaOccupationCodeId=code_data['suvaOccupationCodeId'],
-                IscoOccupationTypeId=code_data['IscoOccupationTypeId'],
+                iscoOccupationTypeId=code_data['IscoOccupationTypeId'],
                 description=selected_description,
-                businessUnitCode=code_data['businessUnitCode'],
+                companyPartCode=code_data['companyPartCode'],
                 active=code_data['active']
             ))
 
         # fake data
-        bu_a = BusinessUnitFiltered(businessUnitCode='A', description='Montage')
-        bu_d = BusinessUnitFiltered(businessUnitCode='D', description='Forschung')
+        bu_a = CompanyPartFiltered(companyPartCode='A', description='Montage')
+        bu_d = CompanyPartFiltered(companyPartCode='D', description='Forschung')
 
-        s1 = SubnummerFiltered(subnumberCode='01', description='Demo', premiumModel='UVG_CLASSIC', businessUnits=[bu_a, bu_d])
-        s2 = SubnummerFiltered(subnumberCode='02', description='Demo Taritemp - ' + customerId, premiumModel='UVG_OCCUPATION_CODES', occupationCodes=occupation_codes)
+        s1 = SubNumberFiltered(subNumberCode='01', description='Demo', premiumModel='UVG_CLASSIC', companyParts=[bu_a, bu_d])
+        s2 = SubNumberFiltered(subNumberCode='02', description='Demo Taritemp - ' + customerId, premiumModel='UVG_OCCUPATION_CODES', occupationCodes=occupation_codes)
 
         return [s1, s2]
 

@@ -5,18 +5,20 @@
 
 ARG WGET_ARGUMENTS=""
 ARG PIP_ARGUMENTS=""
-ARG API_YAML_REVISION=5e6d56d84d67917f9f80dd53e167c23d49a389ee
+ARG API_YAML_REVISION=e1b3817bae3789139eed8a6ff45eb8b2e10a4017
+ARG OPENAPI_GENERATOR_VERSION=7.12.0
 
 FROM debian:bookworm as build
 ARG WGET_ARGUMENTS
 ARG API_YAML_REVISION
+ARG OPENAPI_GENERATOR_VERSION
 
 RUN apt-get update && \
   DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends default-jdk wget && \
   apt-get clean && \
   mkdir -p /build
 
-RUN wget $WGET_ARGUMENTS -O /build/openapi-generator-cli.jar https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7.10.0/openapi-generator-cli-7.10.0.jar
+RUN wget $WGET_ARGUMENTS -O /build/openapi-generator-cli.jar https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/${OPENAPI_GENERATOR_VERSION}/openapi-generator-cli-${OPENAPI_GENERATOR_VERSION}.jar
 
 RUN java -jar /build/openapi-generator-cli.jar generate -i https://raw.githubusercontent.com/suva-ch/risk-api/$API_YAML_REVISION/policendaten-schadenmeldung-api.yaml -g python-fastapi -o /build/gen
 
