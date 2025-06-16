@@ -54,6 +54,17 @@ MOCKUP_DATA: List[Dict] = [
         'active': True
     },
     {
+        'suvaOccupationCodeId': 'f236dabb-8046-441a-a0f8-2b0bb592b9ba',
+        'IscoOccupationTypeId': 72120,
+        'companyPartCode': 'I',
+        'descriptions': [
+            {'language': 'de', 'gender': Gender.MALE, 'value': 'Schweisser'},
+            {'language': 'de', 'gender': Gender.FEMALE, 'value': 'Schweisserin'},
+            {'language': 'fr', 'gender': Gender.MALE, 'value': 'Soudeur'},
+        ],
+        'active': True
+    },
+    {
         'suvaOccupationCodeId': 'f66a5e18-cf8b-4538-ad2c-2dea6ca73669',
         'IscoOccupationTypeId': 51512,
         'companyPartCode': 'M',
@@ -140,37 +151,44 @@ class myAPI(BasePolicendatenApi):
             customerId = '8-01747-90000'
 
         occupation_codes = []
+
         # Process MOCKUP_DATA with language and gender selection logic
-        language_order = ['en', 'de', 'fr', 'it']
-        gender_order = [Gender.GENDERLESS, Gender.MALE, Gender.FEMALE]
+
+        language_order : List[str] = ['en', 'de', 'fr', 'it']
+        #gender_order : List[str] = [Gender.GENDERLESS, Gender.MALE, Gender.FEMALE]
 
         def select_description(descriptions: List[Dict], target_lang: str, target_gender: Gender) -> str:
-            # 1. Match language and gender exactly
-            for desc in descriptions:
-                if desc['language'] == target_lang and desc['gender'] == target_gender:
-                    return desc['value']
-            
-            # 2. Match language with neutral gender
-            for desc in descriptions:
-                if desc['language'] == target_lang and desc['gender'] == Gender.GENDERLESS:
-                    return desc['value']
-            
-            # 3. Try other languages with target gender
-            for lang in language_order:
-                for desc in descriptions:
-                    if desc['language'] == lang and desc['gender'] == target_gender:
-                        return desc['value']
-            
-            # 4. Try other languages with neutral gender
-            for lang in language_order:
-                for desc in descriptions:
-                    if desc['language'] == lang and desc['gender'] == Gender.GENDERLESS:
-                        return desc['value']
-            
-            # 5. Take any description (fallback)
-            if descriptions:
-                return descriptions[0]['value']
-            
+            language_order: List[str] = ['en', 'de', 'fr', 'it']
+
+            def get_by_lang_gender(lang: str, gender: str) -> Optional[str]:
+                for d in descriptions:
+                    if d['language'] == lang and d['gender'] == gender:
+                        return d['value']
+                return None
+
+            # target lang and all remaining others
+            langs_to_try: List[str] = [target_lang] + [l for l in language_order if l != target_lang]
+
+            for lang in langs_to_try:
+                # 1. Exact match (lang, target_gender)
+                val: Optional[str] = get_by_lang_gender(lang, target_gender)
+                if val:
+                    return val
+                # 2. (lang, Gender.GENDERLESS)
+                val = get_by_lang_gender(lang, Gender.GENDERLESS)
+                if val:
+                    return val
+                # 3. If at least one of Male/Female in lang, join with " | " if both
+                m_val: Optional[str] = get_by_lang_gender(lang, Gender.MALE)
+                f_val: Optional[str] = get_by_lang_gender(lang, Gender.FEMALE)
+                if m_val or f_val:
+                    if m_val and f_val:
+                        return f"{m_val} | {f_val}"
+                    elif m_val:
+                        return m_val
+                    elif f_val:
+                        return f_val
+
             return "No description available"
 
         for code_data in MOCKUP_DATA:
