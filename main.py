@@ -96,6 +96,15 @@ MOCKUP_DATA: List[Dict] = [
         ],
         'active': True
     },
+    {
+        'suvaOccupationCodeId': '13638987-5665-4858-a0ce-74feaf0051b6',
+        'IscoOccupationTypeId': 71210,
+        'companyPartCode': 'D',
+        'descriptions': [
+            {'language': 'de', 'gender': Gender.GENDERLESS, 'value': 'Dachdecker | Dachdeckerin'},
+        ],
+        'active': True
+    },
 ]
 
 logging.basicConfig(level=logging.DEBUG)
