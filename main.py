@@ -74,7 +74,28 @@ MOCKUP_DATA: List[Dict] = [
             {'language': 'de', 'gender': Gender.MALE, 'value': 'Angestellter Transport und Logistik'}
         ],
         'active': True
-    }
+    },
+    {
+        'suvaOccupationCodeId': 'cc732102-1917-49d6-a239-1f48cdadde89',
+        'IscoOccupationTypeId': 71310,
+        'companyPartCode': 'D',
+        'descriptions': [
+            {'language': 'de', 'gender': Gender.MALE, 'value': 'Maler'},
+            {'language': 'de', 'gender': Gender.FEMALE, 'value': 'Malerin'},
+            {'language': 'de', 'gender': Gender.GENDERLESS, 'value': 'Maler| Malerin'},
+        ],
+        'active': True
+    },
+    {
+        'suvaOccupationCodeId': '623e4024-c465-4472-aa25-df2852a621cb',
+        'IscoOccupationTypeId': 71230,
+        'companyPartCode': 'D',
+        'descriptions': [
+            {'language': 'de', 'gender': Gender.MALE, 'value': 'Gipser'},
+            {'language': 'de', 'gender': Gender.FEMALE, 'value': 'Gipserin'},
+        ],
+        'active': True
+    },
 ]
 
 logging.basicConfig(level=logging.DEBUG)
@@ -154,11 +175,8 @@ class myAPI(BasePolicendatenApi):
 
         # Process MOCKUP_DATA with language and gender selection logic
 
-        language_order : List[str] = ['en', 'de', 'fr', 'it']
-        #gender_order : List[str] = [Gender.GENDERLESS, Gender.MALE, Gender.FEMALE]
-
         def select_description(descriptions: List[Dict], target_lang: str, target_gender: Gender) -> str:
-            language_order: List[str] = ['en', 'de', 'fr', 'it']
+            language_order: List[str] = ['de', 'fr', 'it', 'en']
 
             def get_by_lang_gender(lang: str, gender: str) -> Optional[str]:
                 for d in descriptions:
