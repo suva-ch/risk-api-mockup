@@ -82,7 +82,7 @@ MOCKUP_DATA: List[Dict] = [
         'descriptions': [
             {'language': 'de', 'gender': Gender.MALE, 'value': 'Maler'},
             {'language': 'de', 'gender': Gender.FEMALE, 'value': 'Malerin'},
-            {'language': 'de', 'gender': Gender.GENDERLESS, 'value': 'Maler| Malerin'},
+            {'language': 'de', 'gender': Gender.GENDERLESS, 'value': 'Maler (m/w)'},
         ],
         'active': True
     },
